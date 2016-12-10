@@ -108,6 +108,15 @@ Transmit Interrupts
 • Descriptor done [Transmit Descriptor Write-back (TXDW)] — Set when hardware writes  back a descriptor with RS set. 
 • beside other couple interrupts. 
 
+
+There is a timer in NIC to say how often HW interrupts should be raised for rx packets. 
+
+The packet Timer is started counting when the last byte is written to the buffer, but it can be disabled. The packet timer is restarted each time a new packet is received, but there is also an absolute timer. 
+
+The Absolute Timer ensures that a receive interrupt is generated at some predefined interval after the first packet is received. The absolute timer is started once a packet is received and transferred to host memory (specifically, after the last packet data byte is written to memory) but is NOT reinitialized / restarted each time a new packet is received. When the Absolute Timer expires (no receive interrupt has been generated for the amount of time defined in RADV) the Receive Timer Interrupt is generated. 
+
+
+
 **PCI:**
 Mandatory PCI registers : include device ID, vendor ID, stauts reg, command reg and 6 base addresses, besides the interrupt pin and the interrupt line.
 
@@ -185,32 +194,10 @@ If you execute read() on a file descriptor — such as that connected to a seria
 ``` C
  $ make INIT_CFLAGS=-DTEST_NO_NS run-testtime //⇒ if this flag passed, don’t create NS environment
  ``` 
- 
-- The E1000 is a complicated device with a lot of advanced features, we will be using only the very basic things though. 
-- The NIC has a FIFO buffer. This buffer could be used for retransmission if the fault was on the wire such as collision. 
-- The NIC has a flash and EEPROM, probably to store some configuration. 
-
-………………
+ ………………
 3.2 **Packet Reception**:  In the general case, packet reception consists of recognizing the presence of a packet on the wire, performing address filtering, storing the packet in the receive data FIFO, transferring the data to a receive buffer in host memory (ring buffer), and updating the state of a receive descriptor. 
 3.2.1 Packet Address Filtering: Hardware stores incoming packets in host memory subject to the following filter modes.
 If there is insufficient space in the receive FIFO, hardware drops them and indicates the missed packet in the appropriate statistics registers.
-
-
-
-There is a timer in NIC to say how often HW interrupts should be raised for rx packets. 
-
-The packet Timer is started counting when the last byte is written to the buffer, but it can be disabled. The packet timer is restarted each time a new packet is received, but there is also an absolute timer. 
-
-
-The Absolute Timer ensures that a receive interrupt is generated at some predefined interval after the first packet is received. The absolute timer is started once a packet is received and transferred to host memory (specifically, after the last packet data byte is written to memory) but is NOT reinitialized / restarted each time a new packet is received. When the Absolute Timer expires (no receive interrupt has been generated for the amount of time defined in RADV) the Receive Timer Interrupt is generated. 
-
-
-The Absolute Timer is reinitialized (but not started) when the Receive Timer Interrupt is generated due to a Packet Timer expiration or Small Receive Packet Detect Interrupt.
-
-
-
-
-
 
 
 ** # Other useful information**
@@ -230,14 +217,9 @@ New threads are easily created; new processes require duplication of the parent 
 - Memory buffers pointed to by descriptors store packet data. Hardware supports seven receive buffer sizes, Buffer size is selected by bit settings in the Receive Control register (RCTL). Note this is the size of each descriptor buffer. 
 - There is specific receive descriptor, so that the device driver/kerenl can understand the address where the data is stored, the packet length … etc. 
 
-
-
-
-Reasons of interrupt:-
-The presence of new packets is indicated by the following: • Absolute timer (RDTR) — A predetermined amount of time has elapsed since the first packet received after the hardware timer was written (specifically, after the last packet data byte was written to memory); this also flushes any accumulated descriptors to memory. Software can set the timer value to 0b if it wants to be notified each time a new packet has been stored in memory. 
-• Receive Descriptor Minimum Threshold (ICR.RXDMT) The minimum descriptor threshold helps avoid descriptor underrun by generating an interrupt when the number of free descriptors becomes equal to the minimum. It is measured as a fraction of the receive descriptor ring size.
- • Receiver FIFO Overrun (ICR.RXO) FIFO overrun occurs when hardware attempts to write a byte to a full FIFO. An overrun could indicate that software has not updated the tail pointer to provide enough descriptors/buffers, or that the PCI bus is too slow draining the receive FIFO. Incoming packets that overrun the FIFO are dropped and do not affect future packet reception.
-
+- The E1000 is a complicated device with a lot of advanced features, we will be using only the very basic things though. 
+- The NIC has a FIFO buffer. This buffer could be used for retransmission if the fault was on the wire such as collision. 
+- The NIC has a flash and EEPROM, probably to store some configuration. 
 
 Unlike the TCP checksum, the UDP checksum is optional. Software must set the TXSM bit in the TCP/IP Context Transmit Descriptor to indicate that a UDP checksum should be inserted. Hardware does not overwrite the UDP checksum unless the TXSM bit is set.
 
