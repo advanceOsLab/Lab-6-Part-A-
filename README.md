@@ -2,7 +2,7 @@
 
 
 
-**## General Stuff**
+** ## General Stuff **
 - We use the user mode of the Networking stack of Qemu which doesn't require root privilege. 
 - The NIC is virtual as well, as Qemu emulates the E1000 intel card. 
 - Qemu.pcap file could be used for depugging by either tcpdump or wireshark. 
@@ -13,7 +13,7 @@
 - The same as everything in Unix is a file; in JOS as well, sockets are considered files. 
 The ns env. Creates a thread for each request, so that it can serve multiple requests, especially that some of these requests can block. 
 
-**# Files : **
+** # Files : **
 - nsipc.c : This file has the functions that will use ipc to communicate with the network server env. Including send/receive and accept/bind/listen to the socket.  All of these functions will call nsipc() and pass their specific request. nspic() will send a request using ipc to the ns env. And will be waiting for the response. 
 - sockets.c : the normal user env. will use the functions in this file which then will call the corresponding function in nsipc.c
 - The server : serv.c : For example, waiting fot the transmit request from the nsip, this file will create a new thread and serve the request by forwarding it the lwip. 
@@ -23,8 +23,8 @@ In the umain, we will run several programs/environments usign forking such as th
 
 
 
-**# Other useful information**
-**# Thread vs process : ** 
+** # Other useful information**
+** # Thread vs process : ** 
 The typical difference is that threads (of the same process) run in a shared memory space, while processes run in separate memory spaces.
 Each process has at least one thread. 
 Thread context: it has it own register, kernel stack, user stack… etc
